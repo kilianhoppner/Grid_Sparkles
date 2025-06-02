@@ -1,16 +1,16 @@
 // === Constants ===
-const SPACING = 30;
-const WAVE_SPEED = 0.25;
-const NOISE_AMOUNT = 120;
-const MIN_SIZE = 1;
-const MAX_SIZE = 28;
-const SHIMMER_SPEED = 0.02;
-const SHIMMER_MIN_OPACITY = 100;
+const BASE_SPACING = 30;
+const WAVE_SPEED = 0.45;
+const NOISE_AMOUNT = 40;
+const MIN_SIZE = 0.8;
+const MAX_SIZE = 30;
+const SHIMMER_SPEED = 0.06;
+const SHIMMER_MIN_OPACITY = 190;
 const SHIMMER_MAX_OPACITY = 255;
 
 // === Colors ===
-let bgColor = '#040066';
-let plusColor = '#0000FF';
+let bgColor = '#0000FF';
+let plusColor = '#FFFFFF';
 let selectedColorBg = bgColor;
 let selectedColorPlus = plusColor;
 
@@ -19,29 +19,50 @@ const colors = [
   '#D3BEEC', '#FFD81D', '#FF872A', '#FFFFFF'
 ];
 
-let swatchButtonBg, swatchButtonPlus;
+let swatchButtonBg, swatchButtonPlus, svgButton;
 let swatchMenuBg, swatchMenuPlus;
 let swatchElementsBg = [], swatchElementsPlus = [];
+
+let cols, rows, SPACING;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   noStroke();
   rectMode(CENTER);
+  calculateGrid();
 
   createColorSwatch('bg', 20, 20);
-  createColorSwatch('plus', 20, 70);
+  createColorSwatch('plus', 70, 20);
+
+  svgButton = createButton('SVG');
+  svgButton.position(120, 20);
+  svgButton.style('padding', '6px 12px');
+  svgButton.style('background', '#fff');
+  svgButton.style('border', '2px solid #333');
+  svgButton.style('border-radius', '40px');
+  svgButton.style('cursor', 'pointer');
+  svgButton.style('font-size', '14px');
+  svgButton.style('display', 'flex');
+  svgButton.style('align-items', 'center');
+  svgButton.style('justify-content', 'center');
+  svgButton.mousePressed(exportToSVG);
+  svgButton.mouseOver(() => svgButton.style('border', '2px solid red'));
+  svgButton.mouseOut(() => svgButton.style('border', '2px solid #333'));
+}
+
+function calculateGrid() {
+  cols = Math.floor(width / BASE_SPACING);
+  rows = Math.floor(height / BASE_SPACING);
+  SPACING = min(width / cols, height / rows); // Maintain equal spacing
 }
 
 function draw() {
   background(bgColor);
 
-  let cols = Math.floor(width / SPACING);
-  let rows = Math.floor(height / SPACING);
-
   for (let row = 0; row <= rows; row++) {
     for (let col = 0; col <= cols; col++) {
-      let x = col * SPACING;
-      let y = row * SPACING;
+      let x = col * SPACING + SPACING / 2;
+      let y = row * SPACING + SPACING / 2;
 
       let yWaveCenter = height / 2
         + sin((col + frameCount * WAVE_SPEED) * 0.05) * 250
@@ -65,7 +86,6 @@ function draw() {
 function drawPlus(x, y, s, a) {
   let unit = s / 5;
   fill(red(plusColor), green(plusColor), blue(plusColor), a);
-
   beginShape();
   vertex(x - 2.5 * unit, y - 0.5 * unit);
   vertex(x - 0.5 * unit, y - 0.5 * unit);
@@ -90,17 +110,14 @@ function keyPressed() {
 
 function exportToSVG() {
   let svg = [];
-  let cols = Math.floor(width / SPACING);
-  let rows = Math.floor(height / SPACING);
-
   svg.push('<?xml version="1.0" encoding="UTF-8" standalone="no"?>');
-  svg.push(`<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="${width}" height="${height}">`);
-  svg.push(`<rect width="${width}" height="${height}" fill="${bgColor}" />`);
+  svg.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">`);
+  svg.push(`<rect width="100%" height="100%" fill="${bgColor}" />`);
 
   for (let row = 0; row <= rows; row++) {
     for (let col = 0; col <= cols; col++) {
-      let x = col * SPACING;
-      let y = row * SPACING;
+      let x = col * SPACING + SPACING / 2;
+      let y = row * SPACING + SPACING / 2;
 
       let yWaveCenter = height / 2
         + sin((col + frameCount * WAVE_SPEED) * 0.05) * 250
@@ -118,23 +135,7 @@ function exportToSVG() {
       let fillOpacity = (alpha / 255).toFixed(3);
       let unit = size / 5;
 
-      let d = `
-        M ${x - 2.5 * unit} ${y - 0.5 * unit}
-        L ${x - 0.5 * unit} ${y - 0.5 * unit}
-        L ${x - 0.5 * unit} ${y - 2.5 * unit}
-        L ${x + 0.5 * unit} ${y - 2.5 * unit}
-        L ${x + 0.5 * unit} ${y - 0.5 * unit}
-        L ${x + 2.5 * unit} ${y - 0.5 * unit}
-        L ${x + 2.5 * unit} ${y + 0.5 * unit}
-        L ${x + 0.5 * unit} ${y + 0.5 * unit}
-        L ${x + 0.5 * unit} ${y + 2.5 * unit}
-        L ${x - 0.5 * unit} ${y + 2.5 * unit}
-        L ${x - 0.5 * unit} ${y + 0.5 * unit}
-        L ${x - 2.5 * unit} ${y + 0.5 * unit}
-        Z
-      `.trim();
-
-      svg.push(`<path d="${d}" fill="${plusColor}" fill-opacity="${fillOpacity}" />`);
+      svg.push(`<path d="M ${x - 2.5 * unit} ${y - 0.5 * unit} L ${x - 0.5 * unit} ${y - 0.5 * unit} L ${x - 0.5 * unit} ${y - 2.5 * unit} L ${x + 0.5 * unit} ${y - 2.5 * unit} L ${x + 0.5 * unit} ${y - 0.5 * unit} L ${x + 2.5 * unit} ${y - 0.5 * unit} L ${x + 2.5 * unit} ${y + 0.5 * unit} L ${x + 0.5 * unit} ${y + 0.5 * unit} L ${x + 0.5 * unit} ${y + 2.5 * unit} L ${x - 0.5 * unit} ${y + 2.5 * unit} L ${x - 0.5 * unit} ${y + 0.5 * unit} L ${x - 2.5 * unit} ${y + 0.5 * unit} Z" fill="${plusColor}" fill-opacity="${fillOpacity}" />`);
     }
   }
 
@@ -142,14 +143,12 @@ function exportToSVG() {
 
   let blob = new Blob([svg.join('\n')], { type: "image/svg+xml" });
   let url = URL.createObjectURL(blob);
-
   let link = document.createElement('a');
   link.href = url;
   link.download = 'grid_wave_export.svg';
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-
   setTimeout(() => URL.revokeObjectURL(url), 100);
 }
 
@@ -165,6 +164,9 @@ function createColorSwatch(type, posX, posY) {
     .style('border', '2px solid #333')
     .style('cursor', 'pointer')
     .position(posX, posY);
+
+  swatchButton.mouseOver(() => swatchButton.style('border', '2px solid red'));
+  swatchButton.mouseOut(() => swatchButton.style('border', '2px solid #333'));
 
   let swatchMenu = createDiv('')
     .style('position', 'absolute')
@@ -190,6 +192,12 @@ function createColorSwatch(type, posX, posY) {
       .style('cursor', 'pointer')
       .style('border', col === selectedColor ? '2px solid red' : '2px solid #333');
 
+    swatch.mouseOver(() => swatch.style('border', '2px solid red'));
+    swatch.mouseOut(() => {
+      const color = swatch.style('background-color');
+      swatch.style('border', color === colorString(selectedColor) ? '2px solid red' : '2px solid #333');
+    });
+
     swatch.mousePressed(() => {
       if (type === 'bg') {
         bgColor = col;
@@ -209,11 +217,8 @@ function createColorSwatch(type, posX, posY) {
   }
 
   swatchButton.mousePressed(() => {
-    if (type === 'bg') {
-      swatchMenuPlus?.style('display', 'none');
-    } else {
-      swatchMenuBg?.style('display', 'none');
-    }
+    if (type === 'bg') swatchMenuPlus?.style('display', 'none');
+    else swatchMenuBg?.style('display', 'none');
 
     const isVisible = swatchMenu.style('display') !== 'none';
     swatchMenu.style('display', isVisible ? 'none' : 'grid');
@@ -235,11 +240,7 @@ function createColorSwatch(type, posX, posY) {
 function updateSwatchBorders(swatchList, selectedColor) {
   for (let swatch of swatchList) {
     const color = swatch.style('background-color');
-    if (color === colorString(selectedColor)) {
-      swatch.style('border', '2px solid red');
-    } else {
-      swatch.style('border', '2px solid #333');
-    }
+    swatch.style('border', color === colorString(selectedColor) ? '2px solid red' : '2px solid #333');
   }
 }
 
@@ -250,4 +251,5 @@ function colorString(hex) {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
+  calculateGrid();
 }
