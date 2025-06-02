@@ -1,10 +1,10 @@
 // === Constants ===
 const BASE_SPACING = 30;
-const WAVE_SPEED = 0.45;
+const WAVE_SPEED = 0.43;
 const NOISE_AMOUNT = 40;
-const MIN_SIZE = 0.8;
+const MIN_SIZE = 0.7;
 const MAX_SIZE = 30;
-const SHIMMER_SPEED = 0.06;
+const SHIMMER_SPEED = 0.043;
 const SHIMMER_MIN_OPACITY = 190;
 const SHIMMER_MAX_OPACITY = 255;
 
