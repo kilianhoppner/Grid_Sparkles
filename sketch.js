@@ -139,19 +139,34 @@ function exportToSVG() {
       let x = col * SPACING + SPACING / 2;
       let y = row * SPACING + SPACING / 2;
 
+      // === Multi-directional wave phase ===
+      let wavePhase = (x * 0.8 + y * 1.2 + sin(x * 0.002 + y * 0.002) * 100)
+                    * LARGE_WAVE_FREQUENCY * LARGE_WAVE_RIPPLE_DENSITY
+                    + frameCount * LARGE_WAVE_SPEED;
+      let crest = sin(wavePhase);
+
+      // === Apply y offset from crest ===
+      let globalWaveOffset = crest * LARGE_WAVE_AMPLITUDE;
+      y += globalWaveOffset;
+
+      // === Optional: add vertical wiggle for natural motion ===
       let yWaveCenter = height / 2
         + sin((col + frameCount * WAVE_SPEED) * 0.05) * 250
         + noise(col * 0.1, row * 0.1, frameCount * 0.01) * NOISE_AMOUNT - (NOISE_AMOUNT / 2);
 
       let distToWave = abs(y - yWaveCenter);
-      let size = map(distToWave, 0, height, MAX_SIZE, MIN_SIZE);
+
+      // === Size based on crest value ===
+      let sizeFactor = map(crest, -1, 1, 0.85, 1.15);
+      let size = map(distToWave, 0, height, MAX_SIZE, MIN_SIZE) * sizeFactor;
       size = constrain(size, MIN_SIZE, MAX_SIZE);
 
-      let alpha = map(
-        sin(frameCount * SHIMMER_SPEED + row * 0.05 + col * 0.05),
-        -1, 1,
-        SHIMMER_MIN_OPACITY, SHIMMER_MAX_OPACITY
-      );
+      // === Shimmer based on crest ===
+      const SHIMMER_PHASE_OFFSET = PI / 4;
+      let shimmerCrest = sin(wavePhase + SHIMMER_PHASE_OFFSET);
+      let shimmerValue = pow(max(0, shimmerCrest), 2);
+      let alpha = map(shimmerValue, 0, 1, SHIMMER_MIN_OPACITY, SHIMMER_MAX_OPACITY);
+
       let fillOpacity = (alpha / 255).toFixed(3);
       let unit = size / 5;
 
